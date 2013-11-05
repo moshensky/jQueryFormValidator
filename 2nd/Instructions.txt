@@ -1,0 +1,9 @@
+1. New fields on the Company Info form
+	A. There is a new section within the Billing Information section.  It offers three radio buttons (Now/Later/Never).  If the user selects "Now", then we want to display the auto debit fields (div id is "Auto_Debit_Toggle").  If the user selects "Later" or "Never", then hide the auto debit fields.
+	B. All of the fields with a * are required.  The IDs of the spans for those fields: val_auto_debit_bank, val_auto_debit_routing, val_auto_debit_acct_name, val_auto_debit_acct_num, val_auto_debit_line_1, val_auto_debit_city, val_auto_debit_country, val_auto_debit_region_us, val_auto_debit_region_ca, val_auto_debit_postal
+	C. There are three region fields, exactly the same as earlier on the form, which should be displayed at the appropriate time according to which country is selected.  The validations for these three fields will also change according to which country is selected.
+2. Correction to data being inserted into the Billing Summary field.
+	A. When the user clicks an existing billing account, I need for the label of the selected radio button to be inserted into the summary *with html tags* (<br> <address> etc).  Currently, it seems that the tags are being stripped out.
+	B. When the user enters a new billing account, I need for you to add the tags as the data is written to the summary field.  Format should be <address>1051 7th Avenue<br>Suite 789<br>New York, NY 10001<br>United States</address>
+3. Correction to validations on Contact Information section.
+	A. All of the email fields should be checked to confirm they contain valid email addresses
