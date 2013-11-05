@@ -1,4 +1,23 @@
 ﻿; (function ($) {
+    function EventObject(sender) {
+        this._sender = sender;
+        this._listeners = [];
+    }
+
+    EventObject.prototype = {
+        attach : function (listener) {
+            this._listeners.push(listener);
+        },
+        notify : function (args) {
+            var index;
+
+            for (index = 0; index < this._listeners.length; index += 1) {
+                this._listeners[index](this._sender, args);
+            }
+        }
+    };    
+
+
     // constants
     var constant = {
         sameAsBusinessContact: '-1',
@@ -8,34 +27,13 @@
         newBillingAccount: '0'
     };
 
-    function toggleElement($select, $divToToggle, callback) {
-        $select.change(function () {
-            var $input = $(this);
-            var selectedValue = $input.val();
-            if (selectedValue === constant.newContact) {
-                $divToToggle.show();
-            } else {
-                $divToToggle.hide();
-            }
-
-            if (callback !== undefined) {
-                callback(selectedValue, $input);
-            }
-        });
-    }
 
     $(document).ready(function () {
         var $formDiv = $('div#dnn_ctr2230_ModuleContent > div.form-horizontal');
 
         //#region Variable declarations
         // variables
-        var $businessContactSummaryField = $(document.getElementById(Comp_Info_Standalone.Business_Contact_Summary));
-        var $businessContactFirstName = $(document.getElementById(Comp_Info_Standalone.Business_First_Name));
-        var $businessContactLastName = $(document.getElementById(Comp_Info_Standalone.Business_Last_Name));
-        var $businessContactEmail = $(document.getElementById(Comp_Info_Standalone.Business_Email));
 
-        var $newBusinessContact = $formDiv.find('div#New_Business_Contact');
-        var $businessContactSelect = $(document.getElementById(Comp_Info_Standalone.Business_Contact_ID));
 
         var $billingContactSummaryField = $(document.getElementById(Comp_Info_Standalone.Billing_Contact_Summary));
         var $billingContactFirstName = $(document.getElementById(Comp_Info_Standalone.Billing_First_Name));
@@ -86,28 +84,8 @@
             }
         }
 
-        //#region 5. Business Contact Summary Field
-        /*
-         * a. The Business Contact Summary field ("Comp_Info_Standalone.Business_Contact_Summary") should be populated after 
-         *    the page loads and updated if any of the Business Contact fields change.  If Business Contact field is New Contact,
-         *    the Summary field should be populated with "[First Name] [Last Name], [Email]".  If Business Contact field has a 
-         *    contact selected, then the displayed text (e.g. "John Doe, jdoe@test.com") should populate the Summary field.
-         */
 
-        function populateBusinessContactSummaryField() {
-            var firstName = $businessContactFirstName.val();
-            var lastName = $businessContactLastName.val();
-            var email = $businessContactEmail.val();
-            var result = firstName + ' ' + lastName + ', ' + email;
-            $businessContactSummaryField.val(result);
-            $businessContactSummaryField.change();
-        }
 
-        $businessContactFirstName.change(populateBusinessContactSummaryField).change();
-        $businessContactLastName.change(populateBusinessContactSummaryField).change();
-        $businessContactEmail.change(populateBusinessContactSummaryField).change();
-
-        $businessContactSummaryField.change(updateSummaryFields);
         //endregion
 
         //#region 1. Business Contact New/Existing
@@ -117,6 +95,79 @@
           *   then Name and Email section should be hidden.
          * b. On change of the Business Contact field, the Name and Email section should be shown when New Contact and otherwise hidden.
          */
+
+        //#region 5. Business Contact Summary Field
+        /*
+         * a. The Business Contact Summary field ("Comp_Info_Standalone.Business_Contact_Summary") should be populated after 
+         *    the page loads and updated if any of the Business Contact fields change.  If Business Contact field is New Contact,
+         *    the Summary field should be populated with "[First Name] [Last Name], [Email]".  If Business Contact field has a 
+         *    contact selected, then the displayed text (e.g. "John Doe, jdoe@test.com") should populate the Summary field.
+         */
+
+        function ContactView(elements) {
+            var self = this;
+            this.$firstName = elements.$firstName;
+            this.$lastName = elements.$lastName;
+            this.$email = elements.$email;
+            this.$summary = elements.$summary;
+
+            this.$container = elements.$container;
+            this.$contactSelect = elements.$contactSelect;
+
+            this.selectChanged = new Event(this);
+            this.summaryChanged = new Event(this);
+
+            // attach listeners to HTML controls
+            this.$contactSelect.change(function () {
+                var $input = $(this);
+                var selectedValue = $input.val();
+                if (selectedValue === constant.newContact) {
+                    self.$container.show();
+                } else {
+                    self.$container.hide();
+                }
+
+                self.selectChanged.notify();
+                console.log('here');
+            });
+
+            this.$firstName.change(this.populateSummary.call(this))
+                .change();
+            this.$lastName.change(this.populateSummary.call(this))
+                .change();
+            this.$email.change(this.populateSummary.call(this))
+                .change();
+
+            this.$summary.change(function () {
+                self.summaryChanged.notify();
+            });
+        }
+
+
+        ContactView.prototype = {
+            populateSummary: function() {
+                var firstName = this.$firstName.val();
+                console.log('here inside');
+                console.log(this);
+                var lastName = this.$lastName.val();
+                var email = this.$email.val();
+                var result = firstName + ' ' + lastName + ', ' + email;
+                this.summary.val(result);
+                this.summary.change();
+            }
+        }
+
+
+        var businessContact = new ContactView({
+            $firstName: $(document.getElementById(Comp_Info_Standalone.Business_First_Name)),
+            $lastName: $(document.getElementById(Comp_Info_Standalone.Business_Last_Name)),
+            $email: $(document.getElementById(Comp_Info_Standalone.Business_Email)),
+            $summary: $(document.getElementById(Comp_Info_Standalone.Business_Contact_Summary)),
+            $container: $formDiv.find('div#New_Business_Contact'),
+            $contactSelect: $(document.getElementById(Comp_Info_Standalone.Business_Contact_ID))
+        });
+
+        /*
         toggleElement($businessContactSelect, $newBusinessContact, function (selectedValue, $select) {
             if (selectedValue === constant.newContact) {
                 populateBusinessContactSummaryField();
@@ -127,6 +178,7 @@
             }
         });
         $businessContactSelect.change();
+        */
         //#endregion
 
         //#region 6. Billing Contact Summary Field
